@@ -5,6 +5,7 @@
 
 echo "Creating directory 'my_directory'..." 
 read -p "Enter the name of the directory you want to create: " my_directory
+my_directory="${my_directory}_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$my_directory"
 echo "Directory '$my_directory' has been created successfully."
 
