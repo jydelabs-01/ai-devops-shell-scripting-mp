@@ -28,6 +28,16 @@ die() {
     exit "$exit_code"
 }
 
+# Report which command failed when set -e stops a script.
+# Use with: trap 'on_error $? $LINENO "$BASH_COMMAND"' ERR
+on_error() {
+    local exit_code="$1"
+    local line="$2"
+    local command="$3"
+
+    log_error "Line $line: '$command' failed with exit code $exit_code."
+}
+
 # Print a timestamp for file and directory names, e.g. 20261016_214500
 timestamp() {
     date +%Y%m%d_%H%M%S
@@ -41,4 +51,36 @@ is_positive_integer() {
         '' | *[!0-9]*) return 1 ;;
     esac
     [ "$value" -gt 0 ]
+}
+
+# Return 0 if $1 is a safe file or directory name, 1 otherwise.
+# Allowed: letters, digits, '.', '_' and '-', up to 100 characters.
+# Rejected: empty names, slashes, spaces, and names starting with '-' or '.'.
+is_valid_name() {
+    local name="$1"
+
+    case "$name" in
+        '' | -* | .* | *[!A-Za-z0-9._-]*) return 1 ;;
+    esac
+    [ "${#name}" -le 100 ]
+}
+
+# Exit with an error unless $1 is an existing, writable directory: require_writable_dir <path>
+require_writable_dir() {
+    local dir="$1"
+
+    [ -e "$dir" ] || die "'$dir' does not exist."
+    [ -d "$dir" ] || die "'$dir' is not a directory."
+    [ -w "$dir" ] || die "'$dir' is not writable."
+}
+
+# Exit with code 2 unless every named command is installed: require_commands <command>...
+require_commands() {
+    local cmd
+    local missing=""
+
+    for cmd in "$@"; do
+        command -v "$cmd" > /dev/null 2>&1 || missing="$missing $cmd"
+    done
+    [ -z "$missing" ] || die "Missing required commands:$missing" 2
 }
