@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bashsh   
 
 #This is a script to create directories and files within the directories
 #first create a directory
